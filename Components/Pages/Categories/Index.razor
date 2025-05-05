@@ -1,0 +1,73 @@
+@page "/categories"
+@inject ApplicationDbContext Context
+@attribute [StreamRendering]
+
+
+<h1 class="h3 fw-semibold mb-4 text-dark border-bottom pb-2">Categories</h1>
+<a href="/categories/create" class="btn btn-success mb-3">Create new category</a>
+<br>
+
+<div class="container mt-5">
+    <h2 class="h5 fw-bold mt-4 mb-3">Table categories</h2>
+    @if (!Categories.Any())
+    {
+        <div class="d-flex align-items-center">
+            <strong class="me-2">Loading categories...</strong>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped table-bordered" style="table-layout: fixed;">
+            <thead class="table-dark">
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var category in Categories)
+            {
+                <tr>
+                    <td>@category.Id</td>
+                    <td>
+                        <a href="/categories/@category.Id" class="text-decoration-none text-primary">@category.Title</a>
+                    </td>
+                    <td class="text-nowrap">
+                        <a href="/categories/edit/@category.Id" class="btn btn-sm btn-primary me-2">Edit</a>
+                        &nbsp;&nbsp;
+                        <AuthorizeView>
+                        @if (context.User.IsInRole("admin"))
+                        {
+                            <a href="/categories/delete/@category.Id" class="btn btn-danger">
+                                Delete
+                            </a>
+                        }
+                        </AuthorizeView>
+                    </td>
+                </tr>
+            }
+            </tbody>
+            <tfoot class="table-secondary">
+            <tr>
+                <td><strong>Total</strong></td>
+                <td><strong>@Count</strong></td>
+            </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+@code
+{
+    private IEnumerable<Category> Categories { get; set; } = [];
+    private int Count { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(1000);
+        Categories = await Context.Categories.AsNoTracking().ToListAsync();
+        Count = await Context.Categories.AsNoTracking().CountAsync();
+    }
+}

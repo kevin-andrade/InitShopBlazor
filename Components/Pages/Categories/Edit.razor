@@ -1,0 +1,57 @@
+@page "/categories/edit/{id:int}"
+@inject ApplicationDbContext Context
+@inject NavigationManager Navigation
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@if (Model is null)
+{
+    <div class="alert alert-danger">
+        <p class=" text-center">Category not found.</p>
+    </div>
+}
+else
+{
+    <h1>Edit Category: (@Model.Title)</h1>
+    <EditForm Model="@Model" OnValidSubmit="OnvalidSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <InputText id="title" class="form-control" @bind-Value="Model.Title" />
+            <ValidationMessage For="@(() => Model.Title)" class="text-danger"/>
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a href="/categories" class="btn btn-secondary">Cancel</a>
+        <div class="mb-3"></div>
+    </EditForm>
+}
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+    private Category? Model { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == Id);
+    }
+
+    private async Task OnvalidSubmitAsync()
+    {
+        try
+        {
+            Context.Categories.Update(Model);
+            await Context.SaveChangesAsync();
+            Navigation.NavigateTo("categories");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            throw;
+        }
+    }
+}

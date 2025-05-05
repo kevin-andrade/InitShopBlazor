@@ -1,0 +1,61 @@
+@page "/products/{id:int}"
+@inject ApplicationDbContext Context
+
+@rendermode InteractiveServer
+
+@if (Model is null)
+{
+    <div class="alert alert-danger">
+        <p class=" text-center">Product not found.</p>
+    </div>
+}
+else
+{
+    <h1 class="h3 fw-semibold mb-4 text-dark border-bottom pb-2">Details</h1>
+
+    <EditForm Model="@Model">
+        <DataAnnotationsValidator/>
+    
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <InputText @bind-Value="Model.Title" class="form-control" readonly/>
+            <ValidationMessage For="@(() => Model.Title)" class="text-danger"/>
+        </div>
+    
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputText @bind-Value="Model.Description" class="form-control" readonly/>
+            <ValidationMessage For="@(() => Model.Description)" class="text-danger"/>
+        </div>
+    
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <InputNumber @bind-Value="Model.Price" class="form-control" readonly/>
+            <ValidationMessage For="@(() => Model.Price)" class="text-danger"/>
+        </div>
+    
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <InputText @bind-Value="Model.Category.Title" class="form-control" readonly>
+            </InputText>
+        </div>
+        <a href="/products" class="btn btn-secondary">Back</a>
+        <div class="mb-3"></div>
+    </EditForm>
+}
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+    public Product? Model { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Context
+            .Products
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .FirstOrDefaultAsync(x => x.Id == Id);
+    }
+}

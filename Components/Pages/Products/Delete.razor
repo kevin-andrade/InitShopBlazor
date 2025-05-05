@@ -1,0 +1,66 @@
+@page "/products/delete/{id:int}"
+@inject ApplicationDbContext Context
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+@rendermode InteractiveServer
+
+@if (Model is null)
+{
+    <div class="alert alert-danger">
+        <p class=" text-center">Product not found.</p>
+    </div>
+}
+else
+{
+    <h1 class="h3 fw-semibold mb-4 text-dark border-bottom pb-2">Are you sure you want to delete?</h1>
+
+    <EditForm Model="@Model" OnValidSubmit="DeleteSubmitAsync">
+        <DataAnnotationsValidator/>
+    
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <InputText @bind-Value="Model.Title" class="form-control" readonly/>
+            <ValidationMessage For="@(() => Model.Title)" class="text-danger"/>
+        </div>
+    
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <InputNumber @bind-Value="Model.Price" class="form-control" readonly/>
+            <ValidationMessage For="@(() => Model.Price)" class="text-danger"/>
+        </div>
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="/products" class="btn btn-secondary">Cancel</a>
+        <div class="mb-3"></div>
+    </EditForm>
+}
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+    public Product? Model { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Context
+            .Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == Id);
+    }
+    
+    private async Task DeleteSubmitAsync()
+    {
+        try
+        {
+            Context.Products.Remove(Model);
+            await Context.SaveChangesAsync();
+            Navigation.NavigateTo("categories");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            throw;
+        }
+    }
+}
